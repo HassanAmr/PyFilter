@@ -34,8 +34,6 @@ order = int(float(sys.argv[1]))
 sampleSize = int(float(sys.argv[2]))
 cutoff = float(sys.argv[3])  # desired cutoff frequency of the filter, Hz
 fs = float(sys.argv[4])       # sample rate, Hz  
-
-
 #try:
 #	opts, args = getopt.getopt(argv,"hc:o:n:",["ifile=","ofile="])
 #except getopt.GetoptError:
@@ -50,14 +48,34 @@ fs = float(sys.argv[4])       # sample rate, Hz
 #	elif opt in ("-o", "--ofile"):
 #		outputfile = arg
 
-
-print("starting...")
+data = []
+ws = ' ' #the white space character to be used
+for i in range(0,sampleSize + 1): #the extra 1 is for the label
+	tempArr = []
+	data.append(tempArr)
 
 for line in sys.stdin:
 	if line == '\n':
-		print('end line')
+		sampleData = []
+		label = []
+		strLine = ""
+		for i in range(0, sampleSize + 1):
+			#skip the label array when filtering
+			if i > 0:
+				sampleData.append([float(item) for item in data[i]])
+				sampleData[i-1] = medfilt(sampleData[i-1])
+				sampleData[i-1] = butter_highpass_filter(sampleData[i-1], cutoff, fs, order)
+			else:
+				label = data[i]
+			data[i] = []
+		for i in range(0, len(sampleData[0])):
+			strLine += label[i] + ws
+			for j in range (0, sampleSize):
+				strLine += "{:.6f}".format(sampleData[j][i]) + ws
+			print(strLine)
+			strLine = ""
+		print()
 	else:
 		sample = line.split()	
-		for i in range(1,len(sample)): 
- 			print(sample[i]+'\n')
-	#whatever
+		for i in range(0,len(sample)): 
+ 			data[i].append(sample[i])
